@@ -1,5 +1,6 @@
 import json
 import os
+import random
 
 # ─────────────────────────────────────────
 # 기본 퀴즈 데이터 (일반상식 + 건강, 5개 이상)
@@ -216,11 +217,15 @@ class QuizGame:
             print("\n❌ 등록된 퀴즈가 없습니다. 먼저 퀴즈를 추가해주세요.")
             return
 
-        print("\n🎯 퀴즈를 시작합니다!\n")
-        score = 0
-        total = len(self.quizzes)
+        # 원본 목록은 그대로 두고, 복사본의 순서만 섞어서 출제한다.
+        questions = self.quizzes[:]
+        random.shuffle(questions)
 
-        for i, quiz in enumerate(self.quizzes, start=1):
+        score = 0
+        total = len(questions)
+        print(f"\n🎯 퀴즈를 시작합니다! (총 {total}문제, 랜덤 출제)\n")
+
+        for i, quiz in enumerate(questions, start=1):
             quiz.display(i)
             user_answer = self.input_int("정답 번호를 입력하세요 (1~4): ", 1, 4)
 
