@@ -44,13 +44,46 @@
 - `Ctrl+C` 또는 입력 종료(EOF) 시 저장 후 안전하게 종료합니다.
 - `state.json`이 없으면 기본 퀴즈로 시작하고, 손상되었으면 안내 후 기본 데이터로 복구합니다.
 
+## 🖼️ 실행 화면
+
+**메뉴 / 미응시 상태 점수 확인**
+
+![메뉴](docs/screenshots/menu.png)
+
+**퀴즈 풀기 (랜덤 출제, 결과 및 최고 점수 갱신)**
+
+![퀴즈 풀기](docs/screenshots/play.png)
+
+**퀴즈 추가**
+
+![퀴즈 추가](docs/screenshots/add_quiz.png)
+
+**퀴즈 목록**
+
+![퀴즈 목록](docs/screenshots/list.png)
+
+**점수 확인**
+
+![점수 확인](docs/screenshots/score.png)
+
+**잘못된 입력 처리 (문자 입력, 빈 입력)**
+
+![잘못된 입력](docs/screenshots/invalid_input.png)
+
+**프로그램 재실행 후 데이터 유지** — 추가한 퀴즈를 포함해 9문제가 출제되고, 89점은 기존 최고 점수(100점)보다 낮아 갱신되지 않음
+
+![재실행](docs/screenshots/reload.png)
+![재실행 후 점수](docs/screenshots/reload_score.png)
+
 ## 📂 파일 구조
 ```
 quiz_game/
 ├── main.py       # 게임 전체 코드 (Quiz, QuizGame 클래스 + 기본 퀴즈 데이터)
 ├── state.json    # 퀴즈·최고 점수 저장 파일 (실행 시 자동 생성, Git 추적 제외)
 ├── .gitignore    # Git에 올리지 않을 파일 목록
-└── README.md     # 프로젝트 설명서
+├── README.md     # 프로젝트 설명서
+└── docs/
+    └── screenshots/  # 실행 화면 캡처 이미지
 ```
 
 **main.py 내부 구성**
