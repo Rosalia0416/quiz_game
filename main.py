@@ -1,5 +1,6 @@
 import json
 import os
+import random
 
 # ─────────────────────────────────────────
 # 기본 퀴즈 데이터 (일반상식 + 건강, 5개 이상)
@@ -91,8 +92,10 @@ class Quiz:
 # ─────────────────────────────────────────
 class QuizGame:
     def __init__(self):
-        self.quizzes    = []   # Quiz 객체 목록
-        self.best_score = 0    # 최고 점수
+        self.quizzes      = []    # Quiz 객체 목록
+        self.best_score   = None  # 최고 점수 (100점 만점, 아직 안 풀었으면 None)
+        self.best_correct = 0     # 최고 점수 기록 당시 맞힌 문제 수
+        self.best_total   = 0     # 최고 점수 기록 당시 전체 문제 수
         self.load_state()      # 시작 시 파일 불러오기
 
     # ── 파일 저장 / 불러오기 ──────────────────
@@ -113,7 +116,12 @@ class QuizGame:
                 raise ValueError("최상위 데이터가 dict가 아닙니다.")
 
             self.quizzes    = [Quiz.from_dict(q) for q in data.get("quizzes", [])]
-            self.best_score = data.get("best_score", 0)
+            self.best_score   = data.get("best_score")       # 없으면 None
+            self.best_correct = data.get("best_correct", 0)
+            self.best_total   = data.get("best_total", 0)
+
+            if self.best_score is not None and not isinstance(self.best_score, int):
+                raise ValueError("best_score는 정수 또는 null이어야 합니다.")
 
             if not self.quizzes:          # 퀴즈가 비어 있으면 기본 데이터 보충
                 self._load_defaults()
@@ -122,7 +130,9 @@ class QuizGame:
                 AttributeError, ValueError):
             print("⚠️  저장 파일이 손상되었습니다. 기본 데이터로 초기화합니다.")
             self._load_defaults()
-            self.best_score = 0
+            self.best_score   = None
+            self.best_correct = 0
+            self.best_total   = 0
             self.save_state()             # 손상된 파일을 정상 데이터로 덮어써 복구
         except OSError as e:
             print(f"⚠️  파일을 읽을 수 없습니다: {e}  기본 데이터로 시작합니다.")
@@ -136,8 +146,10 @@ class QuizGame:
         """현재 상태를 state.json 에 저장한다."""
         try:
             data = {
-                "quizzes":    [q.to_dict() for q in self.quizzes],
-                "best_score": self.best_score
+                "quizzes":      [q.to_dict() for q in self.quizzes],
+                "best_score":   self.best_score,
+                "best_correct": self.best_correct,
+                "best_total":   self.best_total
             }
             with open(STATE_FILE, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
@@ -205,11 +217,15 @@ class QuizGame:
             print("\n❌ 등록된 퀴즈가 없습니다. 먼저 퀴즈를 추가해주세요.")
             return
 
-        print("\n🎯 퀴즈를 시작합니다!\n")
-        score = 0
-        total = len(self.quizzes)
+        # 원본 목록은 그대로 두고, 복사본의 순서만 섞어서 출제한다.
+        questions = self.quizzes[:]
+        random.shuffle(questions)
 
-        for i, quiz in enumerate(self.quizzes, start=1):
+        score = 0
+        total = len(questions)
+        print(f"\n🎯 퀴즈를 시작합니다! (총 {total}문제, 랜덤 출제)\n")
+
+        for i, quiz in enumerate(questions, start=1):
             quiz.display(i)
             user_answer = self.input_int("정답 번호를 입력하세요 (1~4): ", 1, 4)
 
@@ -219,16 +235,21 @@ class QuizGame:
             else:
                 print(f"  ❌ 틀렸습니다. 정답은 {quiz.answer}번입니다.")
 
+        # 100점 만점 점수로 환산 (문제 수가 달라져도 공정하게 비교 가능)
+        points = round(score / total * 100)
+
         # 결과 출력
         print("\n" + "="*35)
-        print(f"  🏁 최종 점수: {score} / {total}")
+        print(f"  🏁 결과: {total}문제 중 {score}문제 정답! ({points}점)")
+
+        # 최고 점수 갱신 (처음 푼 경우 None이므로 무조건 기록)
+        if self.best_score is None or points > self.best_score:
+            self.best_score   = points
+            self.best_correct = score
+            self.best_total   = total
+            print("  🎉 새로운 최고 점수입니다!")
         print("="*35)
 
-        # 최고 점수 갱신
-        if score > self.best_score:
-            self.best_score = score
-            print(f"  🏆 새로운 최고 점수! {self.best_score}점")
-        
         self.save_state()
 
     # ── 2. 퀴즈 추가 ──────────────────────────
@@ -274,10 +295,11 @@ class QuizGame:
     # ── 4. 점수 확인 ──────────────────────────
     def show_best_score(self):
         print("\n" + "="*35)
-        if self.best_score == 0:
+        if self.best_score is None:
             print("  아직 퀴즈를 풀지 않았습니다.")
         else:
-            print(f"  🏆 최고 점수: {self.best_score} / {len(self.quizzes)}")
+            print(f"  🏆 최고 점수: {self.best_score}점 "
+                  f"({self.best_total}문제 중 {self.best_correct}문제 정답)")
         print("="*35)
 
     # ── 5. 종료 ───────────────────────────────
