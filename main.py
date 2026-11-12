@@ -1,6 +1,8 @@
 import json
 import os
 import random
+import shutil
+from datetime import datetime
 
 # ─────────────────────────────────────────
 # 기본 퀴즈 데이터 (일반상식 + 건강, 5개 이상)
@@ -52,6 +54,7 @@ DEFAULT_QUIZZES = [
 # → 다른 폴더에서 실행해도 항상 같은 파일을 사용한다.
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE = os.path.join(BASE_DIR, "state.json")
+LOG_FILE   = os.path.join(BASE_DIR, "recovery.log")   # 손상·복구 기록 파일
 
 
 # ─────────────────────────────────────────
@@ -127,16 +130,53 @@ class QuizGame:
                 self._load_defaults()
 
         except (json.JSONDecodeError, KeyError, TypeError,
-                AttributeError, ValueError):
+                AttributeError, ValueError) as e:
             print("⚠️  저장 파일이 손상되었습니다. 기본 데이터로 초기화합니다.")
+            reason = f"{type(e).__name__}: {e}"
+            backup_path = self._backup_corrupted_file()   # 1) 덮어쓰기 전에 원본 백업
             self._load_defaults()
             self.best_score   = None
             self.best_correct = 0
             self.best_total   = 0
-            self.save_state()             # 손상된 파일을 정상 데이터로 덮어써 복구
+            self.save_state()                             # 2) 정상 데이터로 덮어써 복구
+            self._write_recovery_log(reason, backup_path) # 3) 복구 기록 남기기
         except OSError as e:
             print(f"⚠️  파일을 읽을 수 없습니다: {e}  기본 데이터로 시작합니다.")
             self._load_defaults()
+
+    def _backup_corrupted_file(self):
+        """
+        손상된 state.json을 덮어쓰기 전에 복사해 둔다.
+        예) state.json → state.json.20261112_163000.bak
+        시간을 붙여서 여러 번 손상되어도 이전 백업이 지워지지 않게 한다.
+        백업에 성공하면 백업 파일 경로, 실패하면 None을 반환한다.
+        """
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_path = f"{STATE_FILE}.{stamp}.bak"
+        count = 1
+        while os.path.exists(backup_path):        # 같은 이름이 있으면 _1, _2 ... 붙이기
+            backup_path = f"{STATE_FILE}.{stamp}_{count}.bak"
+            count += 1
+        try:
+            shutil.copy2(STATE_FILE, backup_path)
+            print(f"📦 손상된 원본을 백업했습니다: {os.path.basename(backup_path)}")
+            return backup_path
+        except OSError as e:
+            print(f"⚠️  백업에 실패했습니다: {e}")
+            return None
+
+    def _write_recovery_log(self, reason, backup_path):
+        """손상 원인, 백업 파일, 조치 내용을 recovery.log에 한 줄씩 추가한다."""
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        backup_name = os.path.basename(backup_path) if backup_path else "백업 실패"
+        line = (f"[{now}] state.json 손상 감지 | 원인: {reason} | "
+                f"백업: {backup_name} | 조치: 기본 퀴즈 {len(self.quizzes)}개로 복구\n")
+        try:
+            with open(LOG_FILE, "a", encoding="utf-8") as f:   # "a" = 이어쓰기
+                f.write(line)
+            print(f"📝 복구 기록을 남겼습니다: {os.path.basename(LOG_FILE)}")
+        except OSError as e:
+            print(f"⚠️  복구 기록 저장에 실패했습니다: {e}")
 
     def _load_defaults(self):
         """기본 퀴즈 데이터를 불러온다."""

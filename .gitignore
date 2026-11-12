@@ -14,3 +14,7 @@ Thumbs.db
 
 # 실행할 때마다 바뀌는 게임 데이터 (프로그램이 자동 생성)
 state.json
+
+# 손상 파일 백업과 복구 기록 (실행 중 자동 생성)
+*.bak
+recovery.log
