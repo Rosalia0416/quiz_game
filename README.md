@@ -84,7 +84,7 @@ quiz_game/
 ├── .gitignore    # Git에 올리지 않을 파일 목록
 ├── README.md     # 프로젝트 설명서
 └── docs/
-    └── screenshots/  # 실행 화면 캡처 이미지
+    └── screenshots/  # 실행 화면 및 Git 작업 캡처 이미지
 ```
 
 **main.py 내부 구성**
@@ -136,5 +136,58 @@ quiz_game/
 | 읽기/쓰기 권한 오류 | 안내 메시지 출력 후 계속 실행 |
 
 
-## 📝 Git 실습 기록
-- clone한 복제 저장소(quiz_game_clone)에서 이 내용을 추가하고 push했습니다.
+## 🌿 Git 작업 기록
+
+- **원격 저장소:** https://github.com/Rosalia0416/quiz_game
+- **커밋 히스토리:** https://github.com/Rosalia0416/quiz_game/commits/main
+- **브랜치:** `main`(배포용), `feature/score`(점수 개선·랜덤 출제 작업용)
+
+### 1) 커밋 히스토리 (`git log --oneline --graph`)
+기능 단위로 나눈 의미 있는 커밋 10개 이상, `feature/score` 브랜치가 갈라졌다가 `main`으로 병합된 그래프를 확인할 수 있습니다. 같은 화면에 Python 버전과 Git 사용자 설정도 함께 보입니다.
+
+![git log graph](docs/screenshots/git_log.png)
+
+### 2) 브랜치 생성 → 작업 → 병합
+| 순서 | 명령어 | 내용 |
+|---|---|---|
+| 1 | `git checkout -b feature/score` | `main`에서 작업용 브랜치 생성 후 이동 |
+| 2 | `git commit` × 2 | 최고 점수 100점 만점 저장(Fix), 랜덤 출제(Feat) |
+| 3 | `git checkout main` | `main` 브랜치로 복귀 |
+| 4 | `git merge --no-ff feature/score` | 병합 커밋을 남기며 `main`에 병합 |
+
+**브랜치 생성**
+
+![브랜치 생성](docs/screenshots/git_branch.png)
+
+**병합 결과 그래프**
+
+![브랜치 병합](docs/screenshots/git_merge.png)
+
+### 3) clone / pull 실습
+다른 PC에서 작업하는 상황을 가정하여 같은 저장소를 별도 폴더에 복제한 뒤, 변경 사항을 원래 작업 폴더로 가져왔습니다.
+
+| 순서 | 위치 | 명령어 |
+|---|---|---|
+| 1 | 상위 폴더 | `git clone https://github.com/Rosalia0416/quiz_game.git quiz_game_clone` |
+| 2 | `quiz_game_clone` | README에 한 줄 추가 → `git add` → `git commit` → `git push origin main` |
+| 3 | `quiz_game` (기존 폴더) | `git pull origin main` → Fast-forward로 변경 사항 반영 확인 |
+
+- clone한 복제 저장소(quiz_game_clone)에서 이 섹션의 원래 내용을 추가하고 push했습니다. (커밋 `b73fc78`)
+
+**복제 저장소(quiz_game_clone)에서 commit → push**
+
+![clone 후 push](docs/screenshots/git_clone_push.png)
+
+**기존 폴더(quiz_game)에서 pull**
+
+![pull](docs/screenshots/git_pull.png)
+
+### 4) Git 기본 명령어 7종 사용 내역
+| 명령어 | 사용한 곳 |
+|---|---|
+| `init` | 프로젝트 최초 생성 시 로컬 저장소 초기화 |
+| `add` / `commit` | 기능·수정·문서 작업마다 단위별 커밋 |
+| `push` | `main`, `feature/score` 브랜치를 GitHub에 업로드 |
+| `pull` | GitHub에서 만든 README 가져오기, clone 실습 변경 사항 가져오기 |
+| `checkout` | `feature/score` 브랜치 생성·이동, `main` 복귀 |
+| `clone` | `quiz_game_clone` 폴더로 저장소 복제 |
