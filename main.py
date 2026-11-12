@@ -47,7 +47,10 @@ DEFAULT_QUIZZES = [
     },
 ]
 
-STATE_FILE = "state.json"
+# main.py가 있는 폴더(프로젝트 루트)를 기준으로 state.json 경로를 정한다.
+# → 다른 폴더에서 실행해도 항상 같은 파일을 사용한다.
+BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+STATE_FILE = os.path.join(BASE_DIR, "state.json")
 
 
 # ─────────────────────────────────────────
