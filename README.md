@@ -73,6 +73,7 @@
 **프로그램 재실행 후 데이터 유지** — 추가한 퀴즈를 포함해 9문제가 출제되고, 89점은 기존 최고 점수(100점)보다 낮아 갱신되지 않음
 
 ![재실행](docs/screenshots/reload.png)
+
 ![재실행 후 점수](docs/screenshots/reload_score.png)
 
 ## 📂 파일 구조
