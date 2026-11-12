@@ -106,14 +106,26 @@ class QuizGame:
         try:
             with open(STATE_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
+
+            # 최상위 구조는 반드시 {"quizzes": [...], "best_score": ...} 형태여야 한다.
+            # 예) 파일 내용이 [] 이면 dict가 아니므로 손상으로 처리
+            if not isinstance(data, dict):
+                raise ValueError("최상위 데이터가 dict가 아닙니다.")
+
             self.quizzes    = [Quiz.from_dict(q) for q in data.get("quizzes", [])]
             self.best_score = data.get("best_score", 0)
 
             if not self.quizzes:          # 퀴즈가 비어 있으면 기본 데이터 보충
                 self._load_defaults()
 
-        except (json.JSONDecodeError, KeyError, TypeError):
+        except (json.JSONDecodeError, KeyError, TypeError,
+                AttributeError, ValueError):
             print("⚠️  저장 파일이 손상되었습니다. 기본 데이터로 초기화합니다.")
+            self._load_defaults()
+            self.best_score = 0
+            self.save_state()             # 손상된 파일을 정상 데이터로 덮어써 복구
+        except OSError as e:
+            print(f"⚠️  파일을 읽을 수 없습니다: {e}  기본 데이터로 시작합니다.")
             self._load_defaults()
 
     def _load_defaults(self):
